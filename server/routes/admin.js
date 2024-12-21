@@ -4,6 +4,7 @@ const Article = require('../models/article')
 const Author = require('../models/author')
 const adminLayout = '../views/layouts/admin'
 const loginRegisterLayout = '../views/layouts/login_register'
+const adminHomeLayout = '../views/layouts/admin-home'
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const authenticate = require('../middlewares/authentication')
@@ -150,7 +151,7 @@ router.post('/login', async (req, res) => {
     })
 
     // Redirect to tasks
-    res.redirect('/dashboard')
+    res.redirect('/admin/home')
 
   } catch (error) {
     console.error('Error during login:', error.message)
@@ -349,11 +350,68 @@ router.get('/publish-article/:id', authenticate, async (req, res) => {
   }
 });
 
+
+//GET /admin/home
+//Description: Get Admin Home
+router.get('/admin/home', async (req, res) => {
+  try {
+    const locals = {
+      title: 'Blogging Website',
+      description:
+        'Project created for the purpose of learning Node.js and Express.js',
+    }
+
+    let perPage = 3
+    let page = parseInt(req.query.page) || 1
+
+    let articles
+    try {
+      // Aggregation pipeline to filter by status 'Published' and sort by newest articles first
+      articles = await Article.aggregate([
+        {
+          $match: {
+            status: 'Published', // Filter articles by published status
+          },
+        },
+        {
+          $sort: {
+            createdAt: -1, // Sort by the newest articles first
+          },
+        },
+      ])
+        .skip(perPage * page - perPage)
+        .limit(perPage)
+        .exec()
+    } catch (error) {
+      console.error('Aggregation error:', error)
+    }
+
+    const count = await Article.countDocuments({ status: 'Published' }) // Count only published articles
+    const nextPage = page + 1
+    const prevPage = page - 1
+    const hasNextPage = nextPage <= Math.ceil(count / perPage)
+    const hasPrevPage = prevPage >= 1
+//     res.json(articles)
+
+    res.render('index', {
+      locals,
+      articles,
+      currentPage: page,
+      nextPage: hasNextPage ? nextPage : null,
+      prevPage: hasPrevPage ? prevPage : null,
+      layout: adminHomeLayout,
+    })
+  } catch (error) {
+    console.error(error)
+  }
+});
+
+
 // /GET /logout
 //Description: Logout user
 router.get('/logout', async (req, res) => {
   res.clearCookie('authToken')
-  res.redirect('/login')
+  res.redirect('/')
 })
 
 
