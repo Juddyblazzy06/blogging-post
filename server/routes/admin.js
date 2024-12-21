@@ -105,9 +105,15 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
+    if (!email || !password) {
+      return res.render('admin/login', {
+        errorMessage: 'All fields are required',
+        successMessage: null,
+        layout: loginRegisterLayout,
+      })
+    };
     console.log(email, password)
     console.log('Login Request:', { email })
-    console.log(req.user)
 
     // Find the user by username
     const author = await Author.findOne({ email })
@@ -184,7 +190,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
         'Project created for the purpose of learning Node.js and Express.js',
     }
 
-    let perPage = 5
+    let perPage = 10
     let page = parseInt(req.query.page) || 1
 
     const userId = new ObjectId(req.user.authorId) // Fix here
@@ -241,6 +247,14 @@ router.get('/add-article', authenticate, async (req, res) => {
 router.post('/add-article', authenticate, async (req, res) => {
   try {
     const { title, description, body, tags, readingTime } = req.body
+
+    if (!title || !description || !body || !tags || !readingTime) {
+      return res.render('admin/add-article', {
+        errorMessage: 'All fields are required',
+        successMessage: null,
+        layout: adminLayout,
+      })
+    }
     const authorId = req.user.authorId
 
     const article = await Article.create({
@@ -282,10 +296,21 @@ router.get('/edit-article/:id', authenticate, async (req, res) => {
 // //Description: Put article route
 router.put('/edit-article/:id', authenticate, async (req, res) => {
   try {
-    // const locals = {
-    //   title: 'Edit Article',
-    //   description: 'Simple Blog created with NodeJs, Express & MongoDb.',
-    // }
+    const locals = {
+      title: 'Edit Article',
+      description: 'Simple Blog created with NodeJs, Express & MongoDb.',
+    }
+    
+    if (!req.body.title || !req.body.description || !req.body.body || !req.body.tags || !req.body.readingTime) {
+      const article = await Article.findById(req.params.id)
+      return res.render('admin/edit-article', {
+        article,
+        locals,
+        errorMessage: 'All fields are required',
+        successMessage: null,
+        layout: adminLayout,
+      })
+    }
 
     const article = await Article.findByIdAndUpdate(req.params.id)
     article.title = req.body.title
@@ -361,7 +386,7 @@ router.get('/admin/home', async (req, res) => {
         'Project created for the purpose of learning Node.js and Express.js',
     }
 
-    let perPage = 3
+    let perPage = 10
     let page = parseInt(req.query.page) || 1
 
     let articles

@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
         'Project created for the purpose of learning Node.js and Express.js',
     }
 
-    let perPage = 3
+    let perPage = 10
     let page = parseInt(req.query.page) || 1
 
     let articles
@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
     const prevPage = page - 1
     const hasNextPage = nextPage <= Math.ceil(count / perPage)
     const hasPrevPage = prevPage >= 1
-//     res.json(articles)
+
 
     res.render('index', {
       locals,
@@ -143,6 +143,9 @@ router.post('/search', async (req, res) => {
      try {
           
           let searchTerm = req.body.searchTerm;
+          if (!searchTerm || searchTerm.trim() === '') {
+            return res.redirect('/');
+          }
           const locals = {
             title: 'Search Results',
             description: 'Search results for the query: ' + req.body.searchTerm,
@@ -153,12 +156,32 @@ router.post('/search', async (req, res) => {
           const articles = await Article.aggregate([
   {
     $match: {
-      status: "Published", // Ensures only published articles
+      status: "Published"
+    }
+  },
+  {
+    $lookup: {
+      from: "authors", // Assuming your author collection is named 'authors'
+      localField: "authorId",
+      foreignField: "_id",
+      as: "authorDetails"
+    }
+  },
+  {
+    $unwind: {
+      path: "$authorDetails",
+      preserveNullAndEmptyArrays: true // This keeps articles without authors in the result
+    }
+  },
+  {
+    $match: {
       $or: [
         { title: { $regex: searchNoSpecialChars, $options: "i" } },
         { description: { $regex: searchNoSpecialChars, $options: "i" } },
         { body: { $regex: searchNoSpecialChars, $options: "i" } },
-        { tags: { $regex: searchNoSpecialChars, $options: "i" } }
+        { tags: { $regex: searchNoSpecialChars, $options: "i" } },
+        { "authorDetails.firstName": { $regex: searchNoSpecialChars, $options: "i" } },
+        { "authorDetails.lastName": { $regex: searchNoSpecialChars, $options: "i" } }
       ]
     }
   }

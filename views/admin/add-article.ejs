@@ -2,6 +2,14 @@
 <div class="admin-title">
   <h2>Add New Article</h2>
 </div>
+<% if (typeof successMessage !== 'undefined' && successMessage) { %> 
+        <p class="alert-success"><%= successMessage %></p> 
+    <% } %> 
+ 
+    <!-- Display Error Message --> 
+    <% if (typeof errorMessage !== 'undefined' && errorMessage) { %> 
+        <p class="alert-danger"><%= errorMessage %></p> 
+    <% } %>
 
 <form action="/add-article" method="POST">
 
