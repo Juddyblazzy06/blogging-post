@@ -1,0 +1,32 @@
+<a href="/dashboard">&larr; Back</a>
+<div class="admin-title">
+  <h2>Edit Article</h2>
+
+  <form action="/delete-article/<%= article._id %>?_method=DELETE" method="POST">
+    <input type="submit" value="Delete" class="btn-delete btn">
+  </form>
+
+</div>
+
+<form action="/edit-article/<%= article._id %>?_method=PUT" method="POST">
+
+
+  <label for="title"><b>Title</b></label>
+  <input type="text" placeholder="Article Title" name="title" value="<%= article.title %>">
+
+  <label for="description"><b>Description</b></label>
+  <input type="text" placeholder="Article Description" name="description" value="<%= article.description %>">
+
+  <label for="body"><b>Content</b></label>
+  <textarea name="body" cols="50" rows="10" value=""><%= article.body %></textarea>
+
+  <label for="tags"><b>Tags</b></label>
+  <input type="text" placeholder="Article Tags" name="tags" value="<%= article.tags %>">
+
+  <label for="readingTime"><b>Estimated Reading Time</b></label>
+  <input type="text" placeholder="Article Read Time" name="readingTime" value="<%= article.readingTime %>">
+
+
+  <input type="submit" value="Update" class="btn">
+
+</form>

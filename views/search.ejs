@@ -1,0 +1,27 @@
+<div class="author">
+  <h1 class="author__heading">Search Results</h1>
+</div>
+<% if (articles.length === 0) { %>
+    <p class="search__error">No articles found matching your search criteria.</p>
+  <% } else { %>
+
+<section class="articles">
+
+  <ul class="article-ul">
+    <% articles.forEach(article => { %>
+      <li>
+        <a href="/article/<%= article._id %>">
+          <span><%= article.title %></span>
+          <div class="article-list__date">
+          <span><%= article.createdAt.toDateString() %></span>
+          <span><i class="fas fa-eye"></i> <%= article.readCount %></span>
+          </div>
+        </a>
+      </li>
+    <% }) %>
+  </ul>
+  <% } %>
+   
+
+
+</section>
