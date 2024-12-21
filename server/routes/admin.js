@@ -393,7 +393,7 @@ router.get('/admin/home', async (req, res) => {
     const hasPrevPage = prevPage >= 1
 //     res.json(articles)
 
-    res.render('index', {
+    res.render('admin-home-index', {
       locals,
       articles,
       currentPage: page,
@@ -403,6 +403,41 @@ router.get('/admin/home', async (req, res) => {
     })
   } catch (error) {
     console.error(error)
+  }
+});
+
+//GET /article/:id
+//Description: Get an article by id
+router.get('/admin/article/:id', async (req, res) => {
+  try {
+    // Use populate to join the article with the author
+    const article = await Article.findById(req.params.id)
+      .populate('authorId', 'firstName lastName') // Populating authorId with firstName and lastName fields
+      .exec()
+
+    if (article == null) {
+      return res.redirect('/')
+    }
+
+    const locals = {
+      title: article.title,
+      description: article.description,
+    }
+
+    // Increment the view count
+    let articleViewCount = article.readCount
+    articleViewCount++
+    article.readCount = articleViewCount
+    await article.save() // Save the updated article
+
+    res.render('admin-article', {
+      locals,
+      article,
+      layout: adminLayout,
+    })
+  } catch (error) {
+    console.error(error)
+    res.redirect('/admin/home')
   }
 });
 

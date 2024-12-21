@@ -3,6 +3,7 @@ const router = express.Router();
 const Article = require('../models/article');
 const Author = require('../models/author');
 const articleLayout = '../views/layouts/article';
+const adminLayout = '../views/layouts/admin';
 
 //Routes
 
@@ -123,10 +124,10 @@ router.get('/view/:id', async (req, res) => {
 //     article.readCount = articleViewCount
 //     await article.save() // Save the updated article
 
-    res.render('article', {
+    res.render('admin-article', {
       locals,
       article,
-      layout: articleLayout,
+      layout: adminLayout,
     })
   } catch (error) {
     console.error(error)
@@ -149,14 +150,19 @@ router.post('/search', async (req, res) => {
 
           const searchNoSpecialChars = searchTerm.replace(/[^a-zA-Z0-9]/g, ' ');
 
-          const articles = await Article.find({
-               $or: [
-                    { title: { $regex: searchNoSpecialChars, $options: 'i' } },
-                    { description: { $regex: searchNoSpecialChars, $options: 'i' } },
-                    { body: { $regex: searchNoSpecialChars, $options: 'i' } },
-                    { tags: { $regex: searchNoSpecialChars, $options: 'i' } }
-               ]
-          });
+          const articles = await Article.aggregate([
+  {
+    $match: {
+      status: "Published", // Ensures only published articles
+      $or: [
+        { title: { $regex: searchNoSpecialChars, $options: "i" } },
+        { description: { $regex: searchNoSpecialChars, $options: "i" } },
+        { body: { $regex: searchNoSpecialChars, $options: "i" } },
+        { tags: { $regex: searchNoSpecialChars, $options: "i" } }
+      ]
+    }
+  }
+]);
           res.render('search', { locals, articles });
      } catch (error) {
           console.error(error);

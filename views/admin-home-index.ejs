@@ -1,0 +1,40 @@
+<div class="author">
+  <h1 class="author__heading">My Blogging Website</h1>
+  <p class="author__body">I am Jude, Student at Alt_School Africa</p>
+</div>
+
+<img src="/img/businessblog-1.jpg" alt="News paper containing scrabble tag" class="hero-image" width="981" height="528">
+
+<section class="articles">
+  <h2 class="articles__heading">Latest Posts</h2>
+
+  <ul class="article-ul">
+    <% articles.forEach(article => { %>
+      <li>
+        <a href="/admin/article/<%= article._id %>">
+          <span><%= article.title %></span>
+          <div class="article-list__date">
+          <span><%= article.createdAt.toDateString() %></span>
+          <span><%= article.readingTime%></span>
+          <span><i class="fas fa-eye"></i> <%= article.readCount %></span>
+          
+          </div>
+        </a>
+      </li>
+       <% }) %>
+      
+  </ul>
+
+  <div class="pagination__container">
+    
+  <% if (prevPage !== null) { %>
+    <a href="/?page=<%= prevPage %>" class="pagination">View Newer Articles &gt;</a>
+  <% } %>
+    <% if (nextPage !== null) { %>
+   <a href="/?page=<%= nextPage %>" class="pagination">&lt; View Older Articles</a>
+  <% } %>
+
+  </div>
+  
+ </section>
+ 
