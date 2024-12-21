@@ -104,13 +104,13 @@ router.post('/register', async (req, res) => {
 // //Description: Login user
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body
-    console.log(username, password)
-    console.log('Login Request:', { username })
+    const { email, password } = req.body
+    console.log(email, password)
+    console.log('Login Request:', { email })
     console.log(req.user)
 
     // Find the user by username
-    const author = await Author.findOne({ username })
+    const author = await Author.findOne({ email })
     console.log('User Found:', author)
 
     if (!author) {
@@ -135,7 +135,7 @@ router.post('/login', async (req, res) => {
 
     // Generate a JWT token
     const token = jwt.sign(
-      { authorId: author._id, username: author.username },
+      { authorId: author._id, email: author.email },
       process.env.JWT_SECRET,
       {
         expiresIn: '1h',
