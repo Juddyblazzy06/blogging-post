@@ -8,6 +8,7 @@ const adminHomeLayout = '../views/layouts/admin-home'
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const authenticate = require('../middlewares/authentication')
+const { signUpSchema, signInSchema, articleSchema } = require('../middlewares/validator')
 
 
 
@@ -52,14 +53,21 @@ router.post('/register', async (req, res) => {
   try {
     const { username, password, email, firstName, lastName, bio } = req.body
 
-    // Validate if username and password are provided
-    if (!username || !password || !email || !firstName || !lastName) {
+    // Validate the request body using joi
+    const { error, value } = signUpSchema.validate({
+      username,
+      password,
+      email,
+      firstName,
+      lastName,
+      bio,
+    })
+    if (error) {
       return res.render('admin/register', {
-        errorMessage: 'All fields are required',
+        errorMessage: error.details[0].message,
         successMessage: null,
         layout: loginRegisterLayout,
-      })
-    }
+      })};
 
     // Check if username or email already exists
     const existingAuthor = await Author.exists({
@@ -105,13 +113,16 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    if (!email || !password) {
+    // Validate the request body using joi
+    const { error, value } = signInSchema.validate({ email, password })
+    if (error) {
       return res.render('admin/login', {
-        errorMessage: 'All fields are required',
+        errorMessage: error.details[0].message,
         successMessage: null,
         layout: loginRegisterLayout,
       })
-    };
+    }
+   
     console.log(email, password)
     console.log('Login Request:', { email })
 
@@ -146,19 +157,18 @@ router.post('/login', async (req, res) => {
       {
         expiresIn: '1h',
       }
-    ) 
+    )
 
     // Store the token in a cookie
     res.cookie('authToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production'|| false,
+      secure: process.env.NODE_ENV === 'production' || false,
       sameSite: 'lax',
       maxAge: 1 * 60 * 60 * 1000,
     })
 
     // Redirect to tasks
     res.redirect('/admin/home')
-
   } catch (error) {
     console.error('Error during login:', error.message)
     res.render('admin/login', {
@@ -248,13 +258,22 @@ router.post('/add-article', authenticate, async (req, res) => {
   try {
     const { title, description, body, tags, readingTime } = req.body
 
-    if (!title || !description || !body || !tags || !readingTime) {
+    // Validate the request body using joi
+    const { error, value } = articleSchema.validate({
+      title,
+      description,
+      body,
+      tags,
+      readingTime,
+    })
+    if (error) {
       return res.render('admin/add-article', {
-        errorMessage: 'All fields are required',
+        errorMessage: error.details[0].message,
         successMessage: null,
         layout: adminLayout,
       })
     }
+   
     const authorId = req.user.authorId
 
     const article = await Article.create({
@@ -300,13 +319,22 @@ router.put('/edit-article/:id', authenticate, async (req, res) => {
       title: 'Edit Article',
       description: 'Simple Blog created with NodeJs, Express & MongoDb.',
     }
-    
-    if (!req.body.title || !req.body.description || !req.body.body || !req.body.tags || !req.body.readingTime) {
+    const { title, description, body, tags, readingTime } = req.body
+
+    // Validate the request body using joi
+    const { error, value } = articleSchema.validate({
+      title,
+      description,
+      body,
+      tags,
+      readingTime,
+    })
+    if (error) {
       const article = await Article.findById(req.params.id)
       return res.render('admin/edit-article', {
         article,
         locals,
-        errorMessage: 'All fields are required',
+        errorMessage: error.details[0].message,
         successMessage: null,
         layout: adminLayout,
       })
@@ -477,17 +505,3 @@ router.get('/logout', async (req, res) => {
 
 
 module.exports = router
-
-//POST /
-//Description: Login user
-// router.post('/admin', async (req, res) => {
-//   try {
-//     const { username, password } = req.body
-//     console.log(username, password)
-//     res.redirect('/login')
-
-//     // res.render('admin/register', { locals, layout: loginRegisterLayout })
-//   } catch (error) {
-//     console.log(error)
-//   }
-// })

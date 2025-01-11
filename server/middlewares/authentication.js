@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const jwt = require ('jsonwebtoken');
 
 const authMiddleWare = (req, res, next) => {
   console.log('Auth Middleware Triggered'); // Log middleware execution
