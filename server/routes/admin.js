@@ -256,16 +256,14 @@ router.get('/add-article', authenticate, async (req, res) => {
 // //Description: Add article
 router.post('/add-article', authenticate, async (req, res) => {
   try {
-    const { title, description, body, tags, readingTime } = req.body
+    // const { title, description, body, tags, readingTime } = req.body
+    const data = req.body;
+    if (typeof data.tags === "string" ){
+      data.tags = data.tags.split(',').map((tag) => tag.trim())
+    }
 
     // Validate the request body using joi
-    const { error, value } = articleSchema.validate({
-      title,
-      description,
-      body,
-      tags,
-      readingTime,
-    })
+    const { error, value } = articleSchema.validate(data);
     if (error) {
       return res.render('admin/add-article', {
         errorMessage: error.details[0].message,
@@ -274,16 +272,9 @@ router.post('/add-article', authenticate, async (req, res) => {
       })
     }
    
-    const authorId = req.user.authorId
+    value.authorId = req.user.authorId
 
-    const article = await Article.create({
-      title,
-      description,
-      body,
-      tags: tags.split(',').map((tag) => tag.trim()),
-      authorId,
-      readingTime,
-    })
+    const article = await Article.create(value)
 
     res.status(201)
     // .json({ article })
@@ -319,40 +310,63 @@ router.put('/edit-article/:id', authenticate, async (req, res) => {
       title: 'Edit Article',
       description: 'Simple Blog created with NodeJs, Express & MongoDb.',
     }
-    const { title, description, body, tags, readingTime } = req.body
+    const data = req.body
+    if (typeof data.tags === 'string') {
+      data.tags = data.tags.split(',').map((tag) => tag.trim())
+    }
 
     // Validate the request body using joi
-    const { error, value } = articleSchema.validate({
-      title,
-      description,
-      body,
-      tags,
-      readingTime,
-    })
-    if (error) {
-      const article = await Article.findById(req.params.id)
-      return res.render('admin/edit-article', {
-        article,
+    const { error, value } = articleSchema.validate(data)
+
+        if (error) {
+          // Fetch the article to populate the form
+          const article = await Article.findById(req.params.id)
+          if (!article) {
+            return res.status(404).render('admin/edit-article', {
+              locals,
+              errorMessage: 'Article not found.',
+              successMessage: null,
+              layout: adminLayout, 
+            })
+          }
+
+          return res.render('admin/edit-article', {
+            article,
+            locals,
+            errorMessage: error.details[0].message,
+            successMessage: null,
+            layout: adminLayout,
+          })
+        }
+
+    const updatedArticle = await Article.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...value, 
+        updatedAt: Date.now(),
+      },
+      { new: true } 
+    )
+    if (!updatedArticle) {
+      return res.status(404).render('admin/edit-article', {
         locals,
-        errorMessage: error.details[0].message,
+        errorMessage: 'Article not found.',
         successMessage: null,
         layout: adminLayout,
       })
     }
 
-    const article = await Article.findByIdAndUpdate(req.params.id)
-    article.title = req.body.title
-    article.description = req.body.description
-    article.body = req.body.body
-    article.tags = req.body.tags.split(',').map((tag) => tag.trim())
-    article.readingTime = req.body.readingTime
-    article.updatedAt = Date.now()
-    await article.save()
-    
-
     res.redirect('/dashboard')
   } catch (error) {
     console.log(error)
+    // Handle errors gracefully
+    res.status(500).render('admin/edit-article', {
+      locals,
+      errorMessage:
+        'An error occurred while editing the article. Please try again.',
+      successMessage: null,
+      layout: adminLayout,
+    })
   }
 });
 
